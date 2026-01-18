@@ -9,9 +9,9 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 /* =========================================================
-   AFSNIT 02 – Vite config (GitHub Pages + PWA sikker)
+   AFSNIT 02 – Vite config (GitHub Pages + PWA stabil)
    - base: "./" gør at appen virker i undermapper (GitHub Pages)
-   - PWA start_url + scope + icon paths gøres relative
+   - PWA: gør opdateringer stabile (undgår “hvid side” pga. gammel cache)
    ========================================================= */
 
 export default defineConfig(({ mode }) => ({
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => ({
     // Kun i dev (som før)
     mode === "development" && componentTagger(),
 
-    // ✅ PWA (installérbar)
+    // ✅ PWA (installérbar + stabil opdatering)
     VitePWA({
       registerType: "autoUpdate",
 
@@ -64,7 +64,23 @@ export default defineConfig(({ mode }) => ({
       },
 
       workbox: {
+        /* =========================================================
+           AFSNIT 03 – Workbox (stabil opdatering + SPA navigation)
+           ========================================================= */
+
+        // Ryd gamle caches automatisk
+        cleanupOutdatedCaches: true,
+
+        // Tag ny service worker i brug uden at vente
+        skipWaiting: true,
+        clientsClaim: true,
+
+        // SPA fallback (så navigation altid får index.html)
+        // (på GitHub Pages er dette den sikreste løsning)
+        navigateFallback: "./index.html",
+
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
